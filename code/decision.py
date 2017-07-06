@@ -11,6 +11,8 @@ def decision_step(Rover):
 
     # Example:
     # Check if we have vision data to make decisions with
+    if Rover.target is not None:
+        Rover.mode = 'search'
     if Rover.nav_angles is not None:
         # Check for Rover.mode status
         if Rover.mode == 'forward': 
@@ -60,6 +62,28 @@ def decision_step(Rover):
                     # Set steer to mean angle
                     Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                     Rover.mode = 'forward'
+        elif Rover.mode == 'search':
+            print 'search mode'
+            target_pos = Rover.target.position()
+            dist = np.sqrt( (target_pos[0]-Rover.pos[0])**2+(target_pos[1]-Rover.pos[1])**2)
+            #angle = np.arctan2( target_pos[1]-Rover.pos[1], target_pos[0]-Rover.pos[0])
+            Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+            Rover.throttle = 0.1
+            Rover.brake = 0
+
+            if Rover.near_sample:
+                Rover.throttle = 0.0
+                Rover.brake = Rover.brake_set
+                print 'Near'
+                print 'target ',Rover.target.position()
+                print 'angle', Rover.steer
+            #else:
+            #    Rover.throttle = 0.2
+            #    Rover.brake = 0
+            #    Rover.steer = np.clip(angle*180/np.pi, -15,15)
+            #    print 'pos ', Rover.pos
+            #    print 'target ',Rover.target.position()
+            #    print 'angle ', Rover.steer
     # Just to make the rover do something 
     # even if no modifications have been made to the code
     else:
@@ -69,7 +93,10 @@ def decision_step(Rover):
         
     # If in a state where want to pickup a rock send pickup command
     if Rover.near_sample and Rover.vel == 0 and not Rover.picking_up:
+        Rover.target.collected = True
+        Rover.target = None
         Rover.send_pickup = True
+        Rover.mode = 'stop'
     
     return Rover
 
