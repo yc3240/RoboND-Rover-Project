@@ -117,11 +117,10 @@ def perception_step(Rover):
     rock_warped = perspect_transform(rock, source, destination)
     
     xpix, ypix = np.nonzero(obstacle_warped)
-    #Rover.vision_image[xpix, ypix, :] = [0,0,255]
+    Rover.vision_image[xpix, ypix, :] = [255,0,0]
     
     xpix, ypix = np.nonzero(navigable_warped)
-    Rover.vision_image[:,:,:] = 0
-    Rover.vision_image[xpix, ypix, :] = [255,0,0]
+    Rover.vision_image[xpix, ypix, :] = [0,0,255]
 
     xpix, ypix = np.nonzero(rock_warped)
     Rover.vision_image[xpix, ypix, :] = [255,255,0]
@@ -131,9 +130,8 @@ def perception_step(Rover):
     if len(obs_xpix) > 0:
         obs_x_world, obs_y_world = pix_to_world(obs_xpix, obs_ypix, Rover.pos[0], 
                 Rover.pos[1], Rover.yaw, 200, scale=20)
-        #Rover.worldmap[obs_y_world, obs_x_world, 2] = np.clip(Rover.worldmap[obs_y_world, obs_x_world,2]-1, 0, 255)
-        Rover.worldmap[obs_y_world, obs_x_world, 0] = np.clip(Rover.worldmap[obs_y_world, obs_x_world,0]+1, 0, 255)
-        #Rover.ground_truth[obs_y_world, obs_x_world, 1] = np.clip(Rover.ground_truth[obs_y_world, obs_x_world, 1]-1,0,180)
+        if not Rover.unstable():
+            Rover.worldmap[obs_y_world, obs_x_world, 0] = np.clip(Rover.worldmap[obs_y_world, obs_x_world,0]+5, 0, 255)
     
     nav_xpix, nav_ypix = rover_coords(navigable_warped)
     if len(nav_xpix) > 0:
@@ -144,16 +142,14 @@ def perception_step(Rover):
         # update map
         nav_x_world, nav_y_world = pix_to_world(nav_xpix, nav_ypix, Rover.pos[0] \
                 ,Rover.pos[1], Rover.yaw, 200, scale=20)
-        Rover.worldmap[nav_y_world, nav_x_world, 2] = np.clip(Rover.worldmap[nav_y_world, nav_x_world,2]+1,0,255)
+        if not Rover.unstable():
+            Rover.worldmap[nav_y_world, nav_x_world, 2] = np.clip(Rover.worldmap[nav_y_world, nav_x_world,2]+1,0,255)
         #Rover.worldmap[nav_y_world, nav_x_world, 0] = np.clip(Rover.worldmap[nav_y_world, nav_x_world,0]-15,0,255)
         #Rover.ground_truth[nav_y_world, nav_x_world, 1] = np.clip(Rover.ground_truth[nav_y_world, nav_x_world, 1]-5,0,180)
 
     rock_xpix, rock_ypix = rover_coords(rock_warped)
     if len(rock_xpix) > 5 and not Rover.near_sample:
-        # TODO delete this part
-        if Rover.samples_pos is None:
-            Rover.samples_pos = [[], []]
-
+        Rover.search_steps = 0
         # move toward the rock
         dists, angles = to_polar_coords(rock_xpix, rock_ypix )
         Rover.nav_dists = dists
@@ -161,8 +157,8 @@ def perception_step(Rover):
         # update map
         rock_x_world, rock_y_world = pix_to_world(rock_xpix, rock_ypix, Rover.pos[0],
                 Rover.pos[1], Rover.yaw, 200, scale=20)
-        Rover.worldmap[rock_y_world, rock_x_world, 1] = np.clip(Rover.worldmap[rock_y_world, rock_x_world,1]+1,0,255)
-        #Rover.samples_pos = [rock_x_world, rock_y_world]
+        if not Rover.unstable():
+            Rover.worldmap[rock_y_world, rock_x_world, 1] = np.clip(Rover.worldmap[rock_y_world, rock_x_world,1]+1,0,255)
 
         rock_x_center = np.mean(rock_x_world)
         rock_y_center = np.mean(rock_y_world)
@@ -173,18 +169,13 @@ def perception_step(Rover):
             if r.proximity_score((rock_x_center, rock_y_center)) < 15 and not r.collected:
                 r.label((rock_x_center, rock_y_center), rock_area)
                 position = r.position()
-                Rover.samples_pos[0][idx] = position[0]
-                Rover.samples_pos[1][idx] = position[1]
                 Rover.target = r
                 matched = True
         if not matched:
             Rover.rocks.append(Rock((rock_x_center, rock_y_center), rock_area))
-            Rover.samples_pos[0].append(rock_x_center)
-            Rover.samples_pos[1].append(rock_y_center)
             Rover.target = Rover.rocks[-1]
-    #for r in Rover.rocks:
-    #    x, y = r.position()
-    #    cv2.circle(img = Rover.worldmap,center = (x, y), radius = 2, color = [255,255,255], thickness = -1)
+    #elif not Rover.near_sample:
+    #    Rover.target = None
     return Rover
 
 # load preset parameters for perspective transform

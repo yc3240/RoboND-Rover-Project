@@ -11,8 +11,12 @@ def decision_step(Rover):
 
     # Example:
     # Check if we have vision data to make decisions with
-    if Rover.target is not None:
+    if Rover.target is not None and not Rover.target.collected:
         Rover.mode = 'search'
+    if Rover.unstable():
+        if Rover.nav_angles is not None:
+            Rover.steer_dir = np.sign(np.mean(Rover.nav_angles))
+        Rover.mode = 'stop'
     if Rover.nav_angles is not None:
         # Check for Rover.mode status
         if Rover.mode == 'forward': 
@@ -35,6 +39,7 @@ def decision_step(Rover):
                     # Set brake to stored brake value
                     Rover.brake = Rover.brake_set
                     Rover.steer = 0
+                    Rover.steer_dir = np.sign(np.mean(Rover.nav_angles))
                     Rover.mode = 'stop'
 
         # If we're already in "stop" mode then make different decisions
@@ -52,7 +57,8 @@ def decision_step(Rover):
                     # Release the brake to allow turning
                     Rover.brake = 0
                     # Turn range is +/- 15 degrees, when stopped the next line will induce 4-wheel turning
-                    Rover.steer = -15 # Could be more clever here about which way to turn
+                    Rover.steer = 15 * Rover.steer_dir
+                    #Rover.steer = -15 # Could be more clever here about which way to turn
                 # If we're stopped but see sufficient navigable terrain in front then go!
                 if len(Rover.nav_angles) >= Rover.go_forward:
                     # Set throttle back to stored value
@@ -63,37 +69,32 @@ def decision_step(Rover):
                     Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                     Rover.mode = 'forward'
         elif Rover.mode == 'search':
-            print 'search mode'
-            target_pos = Rover.target.position()
-            dist = np.sqrt( (target_pos[0]-Rover.pos[0])**2+(target_pos[1]-Rover.pos[1])**2)
-            #angle = np.arctan2( target_pos[1]-Rover.pos[1], target_pos[0]-Rover.pos[0])
-            Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
-            Rover.throttle = 0.1
-            Rover.brake = 0
-
-            if Rover.near_sample:
-                Rover.throttle = 0.0
-                Rover.brake = Rover.brake_set
-                print 'Near'
-                print 'target ',Rover.target.position()
-                print 'angle', Rover.steer
-            #else:
-            #    Rover.throttle = 0.2
-            #    Rover.brake = 0
-            #    Rover.steer = np.clip(angle*180/np.pi, -15,15)
-            #    print 'pos ', Rover.pos
-            #    print 'target ',Rover.target.position()
-            #    print 'angle ', Rover.steer
+            Rover.search_steps += 1
+            if Rover.search_steps > 1000:
+                Rover.target = None
+            if Rover.target is None:
+                Rover.mode = 'stop'
+            else:
+                target_pos = Rover.target.position()
+                dist = np.sqrt( (target_pos[0]-Rover.pos[0])**2+(target_pos[1]-Rover.pos[1])**2)
+                Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                Rover.throttle = 0.1
+                Rover.brake = 0
+                # stop to pickup the rock
+                if Rover.near_sample:
+                    Rover.throttle = 0.0
+                    Rover.brake = Rover.brake_set
     # Just to make the rover do something 
     # even if no modifications have been made to the code
     else:
-        Rover.throttle = Rover.throttle_set
-        Rover.steer = 0
+        Rover.throttle = 0#Rover.throttle_set
+        Rover.steer = -15
         Rover.brake = 0
         
     # If in a state where want to pickup a rock send pickup command
     if Rover.near_sample and Rover.vel == 0 and not Rover.picking_up:
-        Rover.target.collected = True
+        if Rover.target is not None:
+            Rover.target.collected = True
         Rover.target = None
         Rover.send_pickup = True
         Rover.mode = 'stop'

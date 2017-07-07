@@ -81,6 +81,18 @@ class RoverState():
 	# NOTE: USER-DEFINED MEMBERS
 	self.rocks = []
         self.target = None
+        self.steer_dir = 1
+        self.search_steps = 0
+    def unstable(self):
+        if Rover.pitch > 180 and 360-Rover.pitch > 8:
+            return True
+        if Rover.pitch <= 180 and Rover.pitch > 8:
+            return True
+        if Rover.roll > 180 and 360-Rover.roll > 8:
+            return True
+        if Rover.roll <= 180 and Rover.roll > 8:
+            return True
+        return False
 # Initialize our rover 
 Rover = RoverState()
 
@@ -103,7 +115,7 @@ def telemetry(sid, data):
         fps = frame_counter
         frame_counter = 0
         second_counter = time.time()
-    print("Current FPS: {}".format(fps))
+    #print("Current FPS: {}".format(fps))
 
     if data:
         global Rover
