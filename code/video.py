@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 import scipy.misc # For saving images as needed
 import glob  # For reading in a list of images from a folder
 import pandas as pd
-#from image_process import *
-#from buildmap import *
 from perception import *
 
 # Change the path below to your data directory
@@ -79,14 +77,14 @@ def process_image(img):
     global source, destination, data
     output_image = np.zeros((img.shape[0] + data.worldmap.shape[0], img.shape[1]*2, 3))
         
-        # UPPER LEFT CORNER: original image
+    # UPPER LEFT CORNER: original image
     output_image[0:img.shape[0], 0:img.shape[1]] = img
 
-        # UPPDER RIGHT CORNER: warped image
+    # UPPDER RIGHT CORNER: warped image
     warped = perspect_transform(img, source, destination)
     output_image[0:img.shape[0], img.shape[1]:] = warped
 
-        # BOTTOM RIGHT CORNER: navigable and obstacle threshold
+    # BOTTOM RIGHT CORNER: navigable and obstacle threshold
     bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     rock = detect_rock(bgr)
     navigable = detect_path(bgr)
@@ -98,14 +96,14 @@ def process_image(img):
 
     filtered = np.zeros((rock_warped.shape[0], rock_warped.shape[1],3),np.uint8)
     xpix, ypix = np.nonzero(obstacle_warped)
-    filtered[xpix, ypix, :] = [0,0,255]
-    xpix, ypix = np.nonzero(navigable_warped)
     filtered[xpix, ypix, :] = [255,0,0]
+    xpix, ypix = np.nonzero(navigable_warped)
+    filtered[xpix, ypix, :] = [0,0,255]
     xpix, ypix = np.nonzero(rock_warped)
     filtered[xpix, ypix, :] = [255,255,0]
     output_image[img.shape[0]:img.shape[0]+navigable_warped.shape[0], img.shape[1]:,:] = filtered
 
-        # Construct navigable map
+    # Construct navigable map
     nav_xpix, nav_ypix = rover_coords(navigable_warped)
     if len(nav_xpix) > 0:
         nav_x_world, nav_y_world = pix_to_world(nav_xpix, nav_ypix, data.xpos[data.count], 
@@ -118,8 +116,8 @@ def process_image(img):
     if len(obs_xpix) > 0:
         obs_x_world, obs_y_world = pix_to_world(obs_xpix, obs_ypix, data.xpos[data.count], 
                 data.ypos[data.count], data.yaw[data.count], 200, scale=20)
-        data.worldmap[obs_y_world, obs_x_world, 2] = np.clip(data.worldmap[obs_y_world, obs_x_world,2]-1, 0, 255)
-        data.worldmap[obs_y_world, obs_x_world, 0] = np.clip(data.worldmap[obs_y_world, obs_x_world,0]+1, 0, 255)
+        data.worldmap[obs_y_world, obs_x_world, 2] = np.clip(data.worldmap[obs_y_world, obs_x_world,2]-3, 0, 255)
+        data.worldmap[obs_y_world, obs_x_world, 0] = np.clip(data.worldmap[obs_y_world, obs_x_world,0]+3, 0, 255)
         data.ground_truth[obs_y_world, obs_x_world, 1] = np.clip(data.ground_truth[obs_y_world, obs_x_world, 1]-1,0,180)
     
     rock_xpix, rock_ypix = rover_coords(rock_warped)
@@ -137,15 +135,15 @@ def process_image(img):
         if not matched:
             data.rocks.append(Rock((rock_x_center, rock_y_center), rock_area))
         
-        # BOTTOM LEFT CORNER: world map
-        # NOTE: x_world & y_world are flipped
+    # BOTTOM LEFT CORNER: world map
+    # NOTE: x_world & y_world are flipped
     map_add = cv2.addWeighted(data.worldmap, 1, data.ground_truth, 0.5, 0)
     for r in data.rocks:
         x, y = r.position()
         cv2.circle(img = map_add,center = (x, y), radius = 2, color = [255,255,255], thickness = -1)
     output_image[img.shape[0]:, 0:data.worldmap.shape[1], :] = np.flipud(map_add)
         # Then putting some text over the image
-    cv2.putText(output_image,"Vision-Based Autonomous Navigation", (20, 20), 
+    cv2.putText(output_image,"Vision-Based Mapping and Navigation", (20, 20), 
                 cv2.FONT_HERSHEY_COMPLEX, 0.4, (255, 255, 255), 1)
     if data.count < len(data.images) - 1:
         data.count += 1 # Keep track of the index in the Databucket()
@@ -157,7 +155,7 @@ if __name__ == '__main__':
 
     source, destination = load_trans_config('params/trans_config.txt')
     # Define pathname to save the output video
-    output = '../output/test_mapping.mp4'
+    output = '../output/mapping.mp4'
     data = Databucket()
     clip = ImageSequenceClip(data.images, fps=60) 
     new_clip = clip.fl_image(process_image) #NOTE: this function expects color images!!

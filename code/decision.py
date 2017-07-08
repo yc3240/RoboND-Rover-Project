@@ -8,7 +8,7 @@ def decision_step(Rover):
     # initialization
     if Rover.prev_pos is None:
         Rover.prev_pos = Rover.pos
-        Rover.counter = 600
+        Rover.counter = 500
 
     # transit modes whenever counter is down
     if Rover.counter < 0:
@@ -43,9 +43,9 @@ def decision_step(Rover):
                 Rover.counter -= 1
             else:
                 Rover.prev_pos = Rover.pos
-                Rover.counter = 600
+                Rover.counter = 500
             # Check the extent of navigable terrain
-            if Rover.target is not None:
+            if Rover.target:
                 Rover.mode = 'search'
                 Rover.counter = 300
                 print 'Switch to {} mode'.format(Rover.mode)
@@ -99,12 +99,12 @@ def decision_step(Rover):
                     # Set steer to mean angle
                     Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                     Rover.mode = 'forward'
-                    Rover.counter = 600
+                    Rover.counter = 500
                     print 'Switch to {} mode'.format(Rover.mode)
                     
         elif Rover.mode == 'search':
-            if Rover.target is None:
-                # target is unidentified, use mean angle
+            if not Rover.target:
+                # target is unidentified, use mean angle with lower speed
                 Rover.counter -= 1
                 Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                 Rover.throttle = 0.1
@@ -114,14 +114,12 @@ def decision_step(Rover):
                 else:
                     Rover.prev_pos = Rover.pos
                     Rover.counter = 300
-                    #dist = np.sqrt( (target_pos[0]-Rover.pos[0])**2+(target_pos[1]-Rover.pos[1])**2)
-                    #Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                 # target is identified, use the nearest 5 angles to prevent outlier
                 peak_angles = np.array([y for x,y in sorted(zip(Rover.nav_dists, Rover.nav_angles))[0:5]])
                 Rover.steer = np.clip(np.mean(peak_angles * 180/np.pi), -15, 15)
                 Rover.throttle = 0.1
                 Rover.brake = 0
-            # stop to pickup the rock
+            # if rock is nearby, stop to pickup the rock
             if Rover.near_sample:
                 Rover.throttle = 0.0
                 Rover.brake = Rover.brake_set
@@ -145,9 +143,6 @@ def decision_step(Rover):
         
     # If in a state where want to pickup a rock send pickup command
     if Rover.near_sample and Rover.vel == 0 and not Rover.picking_up:
-        if Rover.target is not None:
-            Rover.target.collected = True
-        Rover.target = None
         Rover.send_pickup = True
         Rover.mode = 'stop'
         Rover.counter = 40

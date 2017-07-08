@@ -129,7 +129,7 @@ def perception_step(Rover):
         
     rock_xpix, rock_ypix = rover_coords(rock_warped)
     if len(rock_xpix) > 5 and not Rover.near_sample:
-        Rover.search_steps = 0
+        Rover.target = True
         # move toward the rock instead of navigable region
         dists, angles = to_polar_coords(rock_xpix, rock_ypix )
         Rover.nav_dists = dists
@@ -140,23 +140,8 @@ def perception_step(Rover):
         if not Rover.unstable():
             Rover.worldmap[rock_y_world, rock_x_world, 1] = np.clip(Rover.worldmap[rock_y_world, rock_x_world,1]+1,0,255)
 
-        # compare instances of Rover's rock list
-        rock_x_center = np.mean(rock_x_world)
-        rock_y_center = np.mean(rock_y_world)
-        rock_area = len(rock_x_world)
-        matched = False
-        for idx, r in enumerate(Rover.rocks):
-            if r.proximity_score((rock_x_center, rock_y_center)) < 15 and not r.collected:
-                r.label((rock_x_center, rock_y_center), rock_area)
-                position = r.position()
-                Rover.target = r
-                matched = True
-        # if none is matched, add rock to Rover's rock list
-        if not matched:
-            Rover.rocks.append(Rock((rock_x_center, rock_y_center), rock_area))
-            Rover.target = Rover.rocks[-1]
     elif len(rock_xpix) <= 5 and not Rover.near_sample:
-        Rover.target = None
+        Rover.target = False
     return Rover
 
 # load preset parameters for perspective transform
@@ -212,44 +197,3 @@ def detect_path(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     navigable = cv2.inRange(hsv, path_lower, path_upper)
     return navigable
-
-class Rock():
-    def __init__(self, (x, y), area):
-        self.pos = [(x,y)]
-        self.area = [area]  # confidence is proportional to area
-        self.collected = False
-
-    def __str__(self):
-        x, y = self.position()
-        return 'Rock at ({}, {}) with size {}'.format(x, y, np.mean(self.area))
-
-    def sort(self):
-        new_pos = []
-        new_area = []
-        for a, p in sorted(zip(self.area, self.pos)):
-            new_pos.append(p)
-            new_area.append(a)
-        self.area = new_area
-        self.pos = new_pos
-
-    def position(self):
-        # weighged position infomation
-        A = sum(self.area)
-        xp = 0.
-        yp = 0.
-        for i in xrange(len(self.area)):
-            xp += self.pos[i][0] * self.area[i] / A
-            yp += self.pos[i][1] * self.area[i] / A
-        return int(xp), int(yp)
-
-    def proximity_score(self, (x, y)):
-        xp, yp = self.position()
-        return abs(xp-x) + abs(yp-y)
-
-    def label(self, (x, y), area):
-        self.pos.append((x, y))
-        self.area.append(area)
-        self.sort()
-        if len(self.pos) > 5:
-            self.pos.pop(0)
-            self.area.pop(0)
