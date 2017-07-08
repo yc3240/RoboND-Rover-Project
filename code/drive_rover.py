@@ -2,7 +2,7 @@
 import argparse
 import shutil
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import cv2
 import numpy as np
@@ -80,9 +80,10 @@ class RoverState():
         self.send_pickup = False # Set to True to trigger rock pickup
 	# NOTE: USER-DEFINED MEMBERS
 	self.rocks = []
-        self.target = None
+        self.target = False
         self.steer_dir = 1
-        self.search_steps = 0
+        self.counter = 600
+        self.prev_pos = None
     def unstable(self):
         if Rover.pitch > 180 and 360-Rover.pitch > 8:
             return True
@@ -157,7 +158,8 @@ def telemetry(sid, data):
         # Example: $ python drive_rover.py image_folder_path
         # Conditional to save image frame if folder was specified
         if args.image_folder != '':
-            timestamp = datetime.utcnow().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3]
+            timestamp = (datetime.utcnow()-timedelta(66,24477,287)).strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3]
+            print timestamp
             image_filename = os.path.join(args.image_folder, timestamp)
             image.save('{}.jpg'.format(image_filename))
 

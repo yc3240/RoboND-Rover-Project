@@ -84,38 +84,20 @@ def perspect_transform(img, src, dst):
 
 # Apply the above functions in succession and update the Rover state accordingly
 def perception_step(Rover):
-    # Perform perception steps to update Rover()
-    # TODO: 
-    # NOTE: camera image is coming to you in Rover.img
-    # 1) Define source and destination points for perspective transform
-    # 2) Apply perspective transform
-    # 3) Apply color threshold to identify navigable terrain/obstacles/rock samples
-    # 4) Update Rover.vision_image (this will be displayed on left side of screen)
-        # Example: Rover.vision_image[:,:,0] = obstacle color-thresholded binary image
-        #          Rover.vision_image[:,:,1] = rock_sample color-thresholded binary image
-        #          Rover.vision_image[:,:,2] = navigable terrain color-thresholded binary image
-
-    # 5) Convert map image pixel values to rover-centric coords
-    # 6) Convert rover-centric pixel values to world coordinates
-    # 7) Update Rover worldmap (to be displayed on right side of screen)
-        # Example: Rover.worldmap[obstacle_y_world, obstacle_x_world, 0] += 1
-        #          Rover.worldmap[rock_y_world, rock_x_world, 1] += 1
-        #          Rover.worldmap[navigable_y_world, navigable_x_world, 2] += 1
-
-    # 8) Convert rover-centric pixel positions to polar coordinates
-    # Update Rover pixel distances and angles
-        # Rover.nav_dists = rover_centric_pixel_distances
-        # Rover.nav_angles = rover_centric_angles
     source, destination = load_trans_config()
     bgr = cv2.cvtColor(Rover.img, cv2.COLOR_RGB2BGR)
+
+    # color threshold based HSV format
     rock = detect_rock(bgr)
     navigable = detect_path(bgr)
     obstacle = cv2.bitwise_not(navigable)
 
+    # warp images
     navigable_warped = perspect_transform(navigable, source, destination)
     obstacle_warped = perspect_transform(obstacle, source, destination)
     rock_warped = perspect_transform(rock, source, destination)
     
+    # draw robot vision
     xpix, ypix = np.nonzero(obstacle_warped)
     Rover.vision_image[xpix, ypix, :] = [255,0,0]
     
@@ -124,8 +106,8 @@ def perception_step(Rover):
 
     xpix, ypix = np.nonzero(rock_warped)
     Rover.vision_image[xpix, ypix, :] = [255,255,0]
-
     
+    # mapping of the world
     obs_xpix, obs_ypix = rover_coords(obstacle_warped)
     if len(obs_xpix) > 0:
         obs_x_world, obs_y_world = pix_to_world(obs_xpix, obs_ypix, Rover.pos[0], 
@@ -135,7 +117,7 @@ def perception_step(Rover):
     
     nav_xpix, nav_ypix = rover_coords(navigable_warped)
     if len(nav_xpix) > 0:
-        # update Rover info.
+        # update Rover's navigable region
         dists, angles = to_polar_coords( nav_xpix, nav_ypix )
         Rover.nav_dists = dists
         Rover.nav_angles = angles
@@ -144,13 +126,11 @@ def perception_step(Rover):
                 ,Rover.pos[1], Rover.yaw, 200, scale=20)
         if not Rover.unstable():
             Rover.worldmap[nav_y_world, nav_x_world, 2] = np.clip(Rover.worldmap[nav_y_world, nav_x_world,2]+1,0,255)
-        #Rover.worldmap[nav_y_world, nav_x_world, 0] = np.clip(Rover.worldmap[nav_y_world, nav_x_world,0]-15,0,255)
-        #Rover.ground_truth[nav_y_world, nav_x_world, 1] = np.clip(Rover.ground_truth[nav_y_world, nav_x_world, 1]-5,0,180)
-
+        
     rock_xpix, rock_ypix = rover_coords(rock_warped)
     if len(rock_xpix) > 5 and not Rover.near_sample:
         Rover.search_steps = 0
-        # move toward the rock
+        # move toward the rock instead of navigable region
         dists, angles = to_polar_coords(rock_xpix, rock_ypix )
         Rover.nav_dists = dists
         Rover.nav_angles = angles
@@ -160,9 +140,9 @@ def perception_step(Rover):
         if not Rover.unstable():
             Rover.worldmap[rock_y_world, rock_x_world, 1] = np.clip(Rover.worldmap[rock_y_world, rock_x_world,1]+1,0,255)
 
+        # compare instances of Rover's rock list
         rock_x_center = np.mean(rock_x_world)
         rock_y_center = np.mean(rock_y_world)
-
         rock_area = len(rock_x_world)
         matched = False
         for idx, r in enumerate(Rover.rocks):
@@ -171,11 +151,12 @@ def perception_step(Rover):
                 position = r.position()
                 Rover.target = r
                 matched = True
+        # if none is matched, add rock to Rover's rock list
         if not matched:
             Rover.rocks.append(Rock((rock_x_center, rock_y_center), rock_area))
             Rover.target = Rover.rocks[-1]
-    #elif not Rover.near_sample:
-    #    Rover.target = None
+    elif len(rock_xpix) <= 5 and not Rover.near_sample:
+        Rover.target = None
     return Rover
 
 # load preset parameters for perspective transform
