@@ -1,5 +1,5 @@
 # Rubics
-![alt text][image_0]
+
 ## Notebook Analysis
 
 ### Implementation Detail
@@ -84,4 +84,4 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Upon finish, transit to stop mode to restart navigation.
 
    Flow chart:
-   [image_0]: ./misc/flowchart.jpg
+   ![alt text](./misc/flowchart.jpg)
