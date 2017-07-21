@@ -15,9 +15,9 @@ Finally, the Databucket has a list of Rocks. The weighted position of each rock 
 
 Please look at the youtube link:
 
-Run 1: [https://www.youtube.com/edit?o=U&video_id=6V07AOrDj24]
+Run 1: [https://youtu.be/6V07AOrDj24]
 
-Run 2: [https://www.youtube.com/edit?o=U&video_id=Okv85XSa1-A]
+Run 2: [https://youtu.be/Okv85XSa1-A]
 
 
 ## Autonomous Navigation and Mapping
@@ -84,4 +84,6 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Upon finish, transit to stop mode to restart navigation.
 
    Flow chart:
+
+
    ![alt text](./misc/flowchart.jpg)
