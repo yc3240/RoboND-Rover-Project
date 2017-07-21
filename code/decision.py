@@ -48,7 +48,7 @@ def decision_step(Rover):
             if Rover.target:
                 Rover.mode = 'search'
                 Rover.counter = 300
-                print 'Switch to {} mode'.format(Rover.mode)
+                print ('Switch to {} mode'.format(Rover.mode))
             elif len(Rover.nav_angles) >= Rover.stop_forward: 
                 # If mode is forward, navigable terrain looks good 
                 # and velocity is below max, then throttle 
