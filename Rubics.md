@@ -22,6 +22,11 @@ Run 2: https://youtu.be/Okv85XSa1-A
 
 ## Autonomous Navigation and Mapping
 
+### Simulator Configuration
+  - resolution: 1024 x 768
+  - image quality: good
+  - fps: 23 ~ 27
+
 ### Implementation Detail
 Perception step is very similar to video.py. It thresholds the warped images by HSV bounds. If the rock image has more than 5 pixels, it will be considered as an rock. The rock vision will then be examined by proximity score and stored in the RoverState instance.
 
