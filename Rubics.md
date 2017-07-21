@@ -13,8 +13,10 @@ Finally, the Databucket has a list of Rocks. The weighted position of each rock 
 
 ### Video
 
-Please look at the youtube link: 
+Please look at the youtube link:
+
 Run 1: [https://www.youtube.com/edit?o=U&video_id=6V07AOrDj24]
+
 Run 2: [https://www.youtube.com/edit?o=U&video_id=Okv85XSa1-A]
 
 
@@ -82,11 +84,19 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Upon finish, transit to stop mode to restart navigation.
 
    Flow chart:
+
                              (t > 500)
+
            forward ---------------------------> backward
+
             ^   \                    (t > 300)   ^  |
+
             |    '-----------search--------------'  |
+
 (navigable) |    (pick up)     |                    |(t = 80)
+
             | .----------------'                    |
+
             | v              (t = 35)               v
+
            stop <-------------------------------- wait
