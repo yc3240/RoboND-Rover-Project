@@ -15,26 +15,26 @@ def decision_step(Rover):
         if Rover.mode == 'forward':
             Rover.mode = 'backward'
             Rover.counter = 80
-            print 'Switch to {} mode'.format(Rover.mode)
+            print ('Switch to {} mode'.format(Rover.mode))
         elif Rover.mode == 'search':
             Rover.mode = 'backward'
             Rover.counter = 80
-            print 'Switch to {} mode'.format(Rover.mode)
+            print ('Switch to {} mode'.format(Rover.mode))
         elif Rover.mode == 'backward':
             Rover.mode = 'wait'
             Rover.counter = 35
-            print 'Switch to {} mode'.format(Rover.mode)
+            print ('Switch to {} mode'.format(Rover.mode))
         elif Rover.mode == 'wait':
             Rover.mode = 'stop'
             Rover.counter = 20
-            print 'Switch to {} mode'.format(Rover.mode)
+            print ('Switch to {} mode'.format(Rover.mode))
             
     if Rover.unstable():
         if Rover.nav_angles is not None:
             Rover.steer_dir = np.sign(np.mean(Rover.nav_angles))
         if not Rover.near_sample and Rover.mode != 'stop':
             Rover.mode = 'stop'
-            print 'Switch to {} mode'.format(Rover.mode)
+            print ('Switch to {} mode'.format(Rover.mode))
     # Check if we have vision data to make decisions with
     if Rover.nav_angles is not None:
         # Check for Rover.mode status
@@ -70,7 +70,7 @@ def decision_step(Rover):
                     Rover.steer_dir = np.sign(np.mean(Rover.nav_angles))
                     Rover.mode = 'stop'
                     Rover.counter = 0  # stop mode does not count
-                    print 'Switch to {} mode'.format(Rover.mode)
+                    print ('Switch to {} mode'.format(Rover.mode))
                     
 
         # If we're already in "stop" mode then make different decisions
@@ -100,7 +100,7 @@ def decision_step(Rover):
                     Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
                     Rover.mode = 'forward'
                     Rover.counter = 500
-                    print 'Switch to {} mode'.format(Rover.mode)
+                    print ('Switch to {} mode'.format(Rover.mode))
                     
         elif Rover.mode == 'search':
             if not Rover.target:
@@ -146,7 +146,7 @@ def decision_step(Rover):
         Rover.send_pickup = True
         Rover.mode = 'stop'
         Rover.counter = 40
-        print 'Switch to {}'.format(Rover.mode)
+        print ('Switch to {}'.format(Rover.mode))
     
     return Rover
 
