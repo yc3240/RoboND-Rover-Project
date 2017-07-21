@@ -15,9 +15,9 @@ Finally, the Databucket has a list of Rocks. The weighted position of each rock 
 
 Please look at the youtube link:
 
-Run 1: https://youtu.be/6V07AOrDj24
+Run 1: [https://youtu.be/6V07AOrDj24]
 
-Run 2: https://youtu.be/Okv85XSa1-A
+Run 2: [https://youtu.be/Okv85XSa1-A]
 
 
 ## Autonomous Navigation and Mapping
@@ -83,7 +83,7 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Lock down the brake for 35 iterations and wait the robot toe stablize.
       Upon finish, transit to stop mode to restart navigation.
 
-#### Decision Flow Chart:
+#### Flow chart:
 
 
    ![alt text](./misc/flowchart.jpg)
