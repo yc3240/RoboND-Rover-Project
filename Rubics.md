@@ -1,5 +1,5 @@
 # Rubics
-
+![alt text][image_0]
 ## Notebook Analysis
 
 ### Implementation Detail
