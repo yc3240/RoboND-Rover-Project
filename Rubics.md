@@ -84,19 +84,4 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Upon finish, transit to stop mode to restart navigation.
 
    Flow chart:
-
-                             (t > 500)
-
-           forward ---------------------------> backward
-
-            ^   \                    (t > 300)   ^  |
-
-            |    '-----------search--------------'  |
-
-(navigable) |    (pick up)     |                    |(t = 80)
-
-            | .----------------'                    |
-
-            | v              (t = 35)               v
-
-           stop <-------------------------------- wait
+   [image_0]: ./misc/flowchart.jpg
