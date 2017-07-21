@@ -83,7 +83,7 @@ Perception step is very similar to video.py. It thresholds the warped images by 
       Lock down the brake for 35 iterations and wait the robot toe stablize.
       Upon finish, transit to stop mode to restart navigation.
 
-   Flow chart:
+#### Decision Flow Chart:
 
 
    ![alt text](./misc/flowchart.jpg)
